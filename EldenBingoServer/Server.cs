@@ -34,7 +34,7 @@ namespace EldenBingoServer
         public bool MatchLogging { get; set; } = false;
         public string MatchLogDirectory { get; set; } = string.Empty;
 
-        public Server(int port, string? jsonPath = null) : base(port)
+        public Server(int port, string? jsonPath = null, string? bindAddress = null) : base(port, bindAddress)
         {
             _rooms = new ConcurrentDictionary<string, ServerRoom>(StringComparer.OrdinalIgnoreCase);
             //Always register the EldenBingoCommon assembly

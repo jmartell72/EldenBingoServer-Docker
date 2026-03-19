@@ -1,0 +1,15 @@
+services:
+  eldenbingo-server:
+    image: ghcr.io/<owner>/eldenbingo-server:latest
+    container_name: eldenbingo-server
+    restart: unless-stopped
+    ports:
+      - "4501:4501"
+    environment:
+      ELDENBINGO_PORT: "4501"
+      ELDENBINGO_BIND_ADDRESS: "0.0.0.0"
+      ELDENBINGO_SERVERDATA_PATH: "/data/server/serverData.json"
+      ELDENBINGO_MATCHLOG_DIR: "/data/matchlogs"
+    volumes:
+      - ./docker-data/server:/data/server
+      - ./docker-data/matchlogs:/data/matchlogs

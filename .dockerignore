@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.git/
+**/.gitignore
+**/.vscode/
+**/*.user
+**/*.suo
+**/*.pdb
+**/*.snk
+**/log.txt

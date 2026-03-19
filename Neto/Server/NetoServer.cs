@@ -13,14 +13,16 @@ namespace Neto.Server
         private readonly ConcurrentDictionary<Guid, CM> _clients;
         private readonly ConcurrentBag<TcpListener> _tcpListeners;
         private readonly ConstructorInfo _clientModelConstructor;
+        private readonly string? _bindAddress;
         private CancellationTokenSource _cancelToken;
 
         private System.Timers.Timer _keepAliveTimer;
 
-        public NetoServer(int port) : base()
+        public NetoServer(int port, string? bindAddress = null) : base()
         {
             Port = port;
-            IPAddresses = getIpAddresses();
+            _bindAddress = bindAddress;
+            IPAddresses = Array.Empty<IPAddress>();
 
             _tcpListeners = new ConcurrentBag<TcpListener>();
             _clients = new ConcurrentDictionary<Guid, CM>();
@@ -49,7 +51,7 @@ namespace Neto.Server
 
         public virtual string Version => "1";
 
-        public IPAddress[] IPAddresses { get; init; }
+        public IPAddress[] IPAddresses { get; private set; }
         public int Port { get; init; }
         protected bool Hosting { get; private set; }
         protected ConcurrentDictionary<string, ClientIdentity> CachedIdentities { get; set; }
@@ -69,14 +71,16 @@ namespace Neto.Server
             _tcpListeners.Clear();
 
             _cancelToken = new CancellationTokenSource();
-            foreach (var ip in getIpAddresses())
+            IPAddresses = resolveAddressesToListenOn();
+            foreach (var ip in IPAddresses)
             {
                 var localIp = ip;
                 var thread = new Thread(() => runTcpListener(localIp));
                 thread.Start();
             }
             Hosting = true;
-            FireOnStatus($"Hosting server on port {Port}");
+            var addressesString = string.Join(", ", IPAddresses.Select(i => i.ToString()));
+            FireOnStatus($"Hosting server on {addressesString}:{Port}");
         }
 
         public virtual async Task Stop()
@@ -162,6 +166,35 @@ namespace Neto.Server
         {
             var clientsToInclude = onlyRegistered ? _clients.Values.Where(c => c.IsRegistered && c.ClientGuid != except) : _clients.Values.Where(c => c.ClientGuid != except);
             await SendPacketToClients(p, clientsToInclude);
+        }
+
+        private IPAddress[] resolveAddressesToListenOn()
+        {
+            if (string.IsNullOrWhiteSpace(_bindAddress))
+            {
+                return getIpAddresses();
+            }
+
+            if (IPAddress.TryParse(_bindAddress, out var parsedAddress))
+            {
+                return new[] { parsedAddress };
+            }
+
+            try
+            {
+                var resolvedAddresses = Dns.GetHostAddresses(_bindAddress).Distinct().ToArray();
+                if (resolvedAddresses.Length > 0)
+                {
+                    return resolvedAddresses;
+                }
+                FireOnStatus($"Warning: bindaddress '{_bindAddress}' resolved to no addresses. Falling back to auto-detected addresses.");
+            }
+            catch (Exception e)
+            {
+                FireOnStatus($"Warning: failed to resolve bindaddress '{_bindAddress}' ({e.Message}). Falling back to auto-detected addresses.");
+            }
+
+            return getIpAddresses();
         }
 
         private static IPAddress[] getIpAddresses()

@@ -32,6 +32,7 @@ namespace EldenBingoServerStandalone
         public static void Main(string[] args)
         {
             int port = BingoConstants.DefaultPort;
+            string? bindAddress = null;
 
             var config = new ConfigurationBuilder()
                 .AddCommandLine(args)
@@ -44,6 +45,10 @@ namespace EldenBingoServerStandalone
                     output("Invalid port", ErrorColor);
                 }
             }
+            if (config["bindaddress"] != null)
+            {
+                bindAddress = config["bindaddress"];
+            }
             if (config["serverdata"] != null)
             {
                 _jsonFile = config["serverdata"];
@@ -52,7 +57,7 @@ namespace EldenBingoServerStandalone
             {
                 _jsonFile = Path.Combine(getApplicationDirectory(), "serverData.json");
             }
-            _server = new Server(port, _jsonFile);
+            _server = new Server(port, _jsonFile, bindAddress);
             if (config["matchlog"] != null)
             {
                 _server.MatchLogging = true;

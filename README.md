@@ -27,6 +27,52 @@ Remember to set-up the appropriate port forwarding.
 
 You can also host a dedicated lobby server. I don't release server binaries with the regular releases anymore but if you need them you can easily download the code and compile it yourself.
 
+## Dockerized dedicated server
+
+This repository now includes a Docker image definition and a GitHub Actions pipeline for CI/CD.
+
+- Dockerfile: [Dockerfile](Dockerfile)
+- Compose example: [docker-compose.server.yml](docker-compose.server.yml)
+- GitHub Actions workflow: [.github/workflows/docker-ci.yml](.github/workflows/docker-ci.yml)
+
+### Exposed port
+
+- Container port: `4501/tcp`
+- Recommended mapping: `4501:4501`
+
+### Runtime arguments used by container startup
+
+The container entrypoint starts the standalone server with:
+
+- `--port`
+- `--serverdata`
+- `--matchlog` (always enabled)
+- `--matchlogdir`
+- `--bindaddress`
+
+### Environment variables
+
+- `ELDENBINGO_PORT` (default `4501`)
+- `ELDENBINGO_SERVERDATA_PATH` (default `/data/server/serverData.json`)
+- `ELDENBINGO_MATCHLOG_DIR` (default `/data/matchlogs`)
+- `ELDENBINGO_BIND_ADDRESS` (default `0.0.0.0`)
+
+### Volume mappings
+
+Recommended host-to-container mappings:
+
+- `./docker-data/server` -> `/data/server`
+- `./docker-data/matchlogs` -> `/data/matchlogs`
+
+This persists:
+
+- server state file (`serverData.json` and `.old` rollover)
+- match log output files
+
+### Bind address behavior
+
+If `--bindaddress` is invalid or cannot be resolved, the server logs a warning and falls back to automatic address detection.
+
 # Connecting to a server and joining a lobby
 Connect to a server by pressing the 'Connect' button in the top left corner. You can choose to auto-connect to the same server every time you launch the application.
 
