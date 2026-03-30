@@ -19,6 +19,7 @@ namespace EldenBingoServerStandalone
         private static string _jsonFile;
 
         private static bool _readInput;
+        private static bool _keyboardInputAvailable;
 
         private static IDictionary<char, (string, Action)> _keyboardShortcuts = new Dictionary<char, (string, Action)>()
         {
@@ -73,10 +74,19 @@ namespace EldenBingoServerStandalone
             _server.OnError += server_OnError;
             _server.OnStatus += server_OnStatus;
             _server.Host();
-            output("Press 'k' to list all keyboard commands", InfoColor);
 
-            _keyboardListenThread = new Thread(new ThreadStart(listenKeyBoardEvent));
-            _keyboardListenThread.Start();
+            _keyboardInputAvailable = !Console.IsInputRedirected;
+            if (_keyboardInputAvailable)
+            {
+                output("Press 'k' to list all keyboard commands", InfoColor);
+                _keyboardListenThread = new Thread(new ThreadStart(listenKeyBoardEvent));
+                _keyboardListenThread.Start();
+            }
+            else
+            {
+                output("Keyboard shortcuts disabled (no interactive console input)", StatusColor);
+            }
+
             _readInput = true;
             var waitHandle = new ManualResetEvent(false);
 
@@ -122,12 +132,23 @@ namespace EldenBingoServerStandalone
         {
             while (!_stopCalled)
             {
-                if (_readInput && Console.KeyAvailable)
+                if (_readInput && _keyboardInputAvailable)
                 {
-                    var key = Console.ReadKey(true);
-                    if (_keyboardShortcuts.TryGetValue(key.KeyChar, out var item))
+                    try
                     {
-                        item.Item2();
+                        if (Console.KeyAvailable)
+                        {
+                            var key = Console.ReadKey(true);
+                            if (_keyboardShortcuts.TryGetValue(key.KeyChar, out var item))
+                            {
+                                item.Item2();
+                            }
+                        }
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        _keyboardInputAvailable = false;
+                        output("Keyboard shortcuts disabled (console input is unavailable)", StatusColor);
                     }
                 }
                 Thread.Sleep(50);
