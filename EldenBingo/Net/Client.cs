@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace EldenBingo
 {
-    public class Client : NetoClient
+    public class Client : SignalRNetoClient
     {
         private Room? _room;
 
