@@ -10,7 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace EldenBingoServer
 {
-    public class Server : NetoServer<BingoClientModel>
+    public class Server : SignalRNetoServer<BingoClientModel>
     {
         //10 seconds countdown before match starts
         private const int MatchStartCountdown = 9999;

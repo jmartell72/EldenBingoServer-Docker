@@ -19,6 +19,7 @@ namespace EldenBingo
 {
     public partial class MainForm : Form
     {
+        private const int DefaultClientPort = 443;
         private static object _connectLock = new object();
         private readonly Client _client;
         private readonly GameProcessHandler _processHandler;
@@ -179,7 +180,7 @@ namespace EldenBingo
             form.TopMost = Properties.Settings.Default.AlwaysOnTop;
             if (form.ShowDialog(this) == DialogResult.OK)
             {
-                await connect(form.Address, form.Port);
+                await connect(form.Address, DefaultClientPort);
             }
         }
 
@@ -411,7 +412,7 @@ namespace EldenBingo
             updateStatusString();
             if (_autoReconnect && !string.IsNullOrWhiteSpace(Properties.Settings.Default.ServerAddress))
             {
-                await connect(Properties.Settings.Default.ServerAddress, Properties.Settings.Default.Port);
+                await connect(Properties.Settings.Default.ServerAddress, DefaultClientPort);
             }
         }
 
@@ -620,18 +621,9 @@ namespace EldenBingo
                 await _client.Disconnect();
             updateButtonAvailability();
 
-            var ipendpoint = Neto.Client.NetoClient.EndPointFromAddress(address, port, out string error);
-            if (ipendpoint == null)
-            {
-                MessageBox.Show(this, error, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return ConnectionResult.Denied;
-            }
-            else
-            {
-                var connectResult = await _client.Connect(address, port);
-                updateButtonAvailability();
-                return connectResult;
-            }
+            var connectResult = await _client.Connect(address, port);
+            updateButtonAvailability();
+            return connectResult;
         }
 
         private void listenToSettingsChanged()
@@ -674,7 +666,7 @@ namespace EldenBingo
 
             if (Properties.Settings.Default.AutoConnect && !string.IsNullOrWhiteSpace(Properties.Settings.Default.ServerAddress))
             {
-                await connect(Properties.Settings.Default.ServerAddress, Properties.Settings.Default.Port);
+                await connect(Properties.Settings.Default.ServerAddress, DefaultClientPort);
             }
             TopMost = Properties.Settings.Default.AlwaysOnTop;
 

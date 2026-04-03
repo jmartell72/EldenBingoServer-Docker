@@ -22,15 +22,6 @@
             set { _autoConnectCheckBox.Checked = value; }
         }
 
-        public int Port
-        {
-            get { return int.Parse(_portTextBox.Text); }
-            set
-            {
-                _portTextBox.Text = value.ToString();
-            }
-        }
-
         private void _cancelButton_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
@@ -43,7 +34,6 @@
             {
                 DialogResult = DialogResult.OK;
                 Properties.Settings.Default.ServerAddress = Address;
-                Properties.Settings.Default.Port = Port;
                 Properties.Settings.Default.AutoConnect = AutoConnect;
                 Properties.Settings.Default.Save();
                 Close();
@@ -53,7 +43,6 @@
         private void ConnectForm_Load(object sender, EventArgs e)
         {
             Address = Properties.Settings.Default.ServerAddress;
-            Port = Properties.Settings.Default.Port;
             AutoConnect = Properties.Settings.Default.AutoConnect;
         }
 
@@ -67,15 +56,6 @@
             else
             {
                 errorProvider1.SetError(_addressTextBox, null);
-            }
-            if (!int.TryParse(_portTextBox.Text, out int p) || p < 1 || p > 65535)
-            {
-                errorProvider1.SetError(_portTextBox, "Invalid port");
-                return false;
-            }
-            else
-            {
-                errorProvider1.SetError(_portTextBox, null);
             }
             return true;
         }
